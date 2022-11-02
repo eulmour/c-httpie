@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+    <meta charset="UTF-8">
+    <title>c-httpie demo</title>
+</head>
+<style>
+    :root {
+        -webkit-user-select: none;
+        -ms-user-select: none;
+        user-select: none;
+    }
+
+    html {
+        touch-action: manipulation;
+    }
+
+    a {
+        text-decoration: none;
+    }
+
+    img {
+        object-fit: contain;
+    }
+
+    select {
+        width: 25%;
+        border: 1px solid #888888;
+        border-radius: 5px;
+        border: opacity 1px;
+    }
+
+    header {
+        height: 30px;
+        background: #3f8bee;
+        padding: 10px;
+    }
+
+    .container {
+        margin-top: 2mm;
+        border-radius: 5px;
+    }
+
+    div {
+        padding: 5px;
+    }
+
+    section {
+        padding: 5px;
+    }
+
+    table {
+        margin: 0 auto;
+        width: 100%;
+    }
+
+    th {
+        font-weight: 400;
+    }
+
+    td {
+        border: 2px collapse black;
+        padding: 5px;
+        background: white;
+    }
+
+    .row {
+        display: flex;
+        justify-content: space-between;
+        align-items: left;
+        padding: 0 2vh 0 2vh;
+    }
+
+    .wide-row {
+        max-width: 1280px;
+        height: 100%;
+        margin: auto;
+    }
+
+    .center {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .white {
+        color: white;
+    }
+
+    .p-md {
+        padding: 10px;
+    }
+</style>
+<body>
+
+    <header>
+        <div class="row">
+            <div>
+                <a href="#" class="white">Single perceptron shape guesser</a>
+            </div>
+            <div>
+                <label for="image-width" class="white">Width:</label>
+                <input id="image-width" type="number" value="256" min="1" max="20000">
+                <label for="image-height" class="white">Height:</label>
+                <input id="image-height" type="number" value="256" min="1" max="20000">
+                <label for="seed" class="white">Seed:</label>
+                <input id="seed" type="number" value="505" min="0" max="160000">
+           </div>
+        </div>
+    </header>
+
+    <div class="wide-row">
+        <section class="center" id="image-browser" style="flex-flow: column;">
+            <div style="display: flex; flex-flow: row;">
+                <img id="preview-image" class="p-md" src="/generate" alt="Shape image">
+                <img id="model-image" class="p-md" src="/model_image" alt="Model image">
+            </div>
+            <div>
+                <label for="ml-passes">Train passes:</label>
+                <input id="ml-passes" type="number" value="5" min="1" max="1000">
+                <label for="ml-iterations">Iterations per pass:</label>
+                <input id="ml-iterations" type="number" value="200" min="1" max="10000">
+                <button id="btn-train" onclick="btn_h_train()">Train</button>
+                <button id="btn-generate" onclick="btn_h_generate()">New image</button>
+                <button disabled id="btn-guess" onclick="btn_h_guess()">Guess</button>
+            </div>
+        </section>
+        <section>
+            <pre id="details-text"></pre>
+        </section>
+    </div>
+    
+</body>
+<script>
+
+    function btn_h_generate() {
+        const width = document.querySelector('#image-width').value;
+        const height = document.querySelector('#image-height').value;
+
+        fetch(`/generate?width=${width}&height=${height}`).then(res => res.blob()).then(data => {
+            const image = URL.createObjectURL(data);
+            document.querySelector('#preview-image').setAttribute('src', image);
+        });
+    }
+
+    function btn_h_guess() {
+        const detailsText = document.querySelector('#details-text');
+        const img = document.querySelector('#preview-image');
+        const width = document.querySelector('#image-width').value;
+        const height = document.querySelector('#image-height').value;
+
+        let canvas = document.createElement('canvas');
+        const context = canvas.getContext('2d');
+
+        canvas.width = img.width;
+        canvas.height = img.height;
+        context.drawImage(img, 0, 0 );
+        const imageData = context.getImageData(0, 0, img.width, img.height);
+
+        detailsText.textContent = "Guessing...";
+        new Promise(resolve => {
+            canvas.toBlob(resolve);
+        }).then(res => {
+            fetch(`/guess?width=${width}&height=${height}`, {
+                headers: {
+                    'Content-type': 'image/png',
+                },
+                method: 'POST',
+                body: res,
+            })
+                .then(res => res.text())
+                .then(data => {
+                    detailsText.textContent = data;
+                }
+            );
+        });
+    }
+
+    function btn_h_train() {
+        const width = document.querySelector('#image-width').value;
+        const height = document.querySelector('#image-height').value;
+        const seed = document.querySelector('#seed').value;
+        const passes = document.querySelector('#ml-passes').value;
+        const iterations = document.querySelector('#ml-iterations').value;
+
+        document.querySelector('#details-text').textContent = `Training ${width}x${height} shapes...`;
+        fetch(`/train?width=${width}&height=${height}&passes=${passes}&iter=${iterations}&seed=${seed}`).then(res => res.text()).then(data => {
+            document.querySelector('#details-text').textContent = data;
+            document.querySelector('#btn-guess').disabled = false;
+
+            fetch("/model_image").then(res => res.blob()).then(data => {
+                document.querySelector('#model-image').setAttribute('src', URL.createObjectURL(data));
+            });
+        });
+    }
+
+    document.querySelector('#image-width').addEventListener('input', event => {
+        document.querySelector('#btn-guess').disabled = true;
+    });
+    document.querySelector('#image-height').addEventListener('input', event => {
+        document.querySelector('#btn-guess').disabled = true;
+    });
+
+</script>
+</html>

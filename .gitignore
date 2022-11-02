@@ -1,0 +1,13 @@
+[Bb]in/
+[Bb]uild/
+[Oo]ut/
+[Cc][Mm]ake*/
+.idea/
+.vs/
+.vscode/
+
+*.lib
+*.obj
+*.pdb
+*.cppcheck
+CMakeSettings.json
