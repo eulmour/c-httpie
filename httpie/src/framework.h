@@ -15,14 +15,7 @@ int httpie_msg(const char* fmt, ...);
 
 #define clean_errno() (errno == 0 ? "None" : strerror(errno))
 
-#ifdef __linux__
-
-#include <unistd.h>
-
-#define httpie_error(M, ...)\
-    fprintf(stderr, "[ERROR] : [%s] : " M "\n", clean_errno(), ##__VA_ARGS__)
-
-#elif defined(_WIN32) || defined(_WIN64)
+#if defined(_WIN32) || defined(_WIN64)
 
 #define httpie_error(msg, ...)\
     httpie_msg("[ERROR] : [%s]\nFile %s, line %d\n\n" msg, clean_errno(),  __FILE__, __LINE__, ##__VA_ARGS__);
@@ -49,8 +42,14 @@ int httpie_msg(const char* fmt, ...);
 	ConsoleWrite(pStr, 16);\
 }
 #endif // HTTPIE_INTERNAL
+#else
 
-#endif // _WIN32 || _WIN64
+// #include <unistd.h>
+
+#define httpie_error(M, ...)\
+    fprintf(stderr, "[ERROR] : [%s] : " M "\n", clean_errno(), ##__VA_ARGS__)
+
+#endif // PLATFORM
 
 #define assertf(cond, format, ...) if(!(cond)) {httpie_error(format, ##__VA_ARGS__); assert(cond); }
 

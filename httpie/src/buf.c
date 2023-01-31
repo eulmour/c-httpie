@@ -46,11 +46,11 @@ struct buf buf_new(const void* data, size_t size) {
 
 struct buf buf_from_file(const char* path) {
 
-#ifdef __linux__
-    FILE* file = fopen(path, "rb");
-#elif defined(_WIN32) || defined(_WIN64)
+#if defined(_WIN32) || defined(_WIN64)
     FILE* file;
 	fopen_s(&file, path, "rb");
+#else
+    FILE* file = fopen(path, "rb");
 #endif
 
     if (!file) {

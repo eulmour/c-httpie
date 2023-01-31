@@ -8,10 +8,10 @@
 #include "stb/stb_image.h"
 #include "stb/stb_image_write.h"
 
-#if defined (_WIN32) || defined (_WIN64)
+#if defined(_WIN32) || defined(_WIN64)
 #   include <direct.h>
 #   define MAKE_DIR(dir) _mkdir(dir)
-#elif defined (__unix__) || defined (__unix)
+#else
 #   define MAKE_DIR(dir) mkdir(dir, 0755)
 #endif
 

@@ -5,6 +5,7 @@
 .idea/
 .vs/
 .vscode/
+.cache/
 
 *.lib
 *.obj

@@ -1,37 +1,7 @@
 #include "framework.h"
 
-#ifdef __linux__
-
-#include <stdarg.h>
-
-int httpie_msg(const char* fmt, ...) {
-
-	size_t size;
-	va_list args, tmp_args;
-	char* str = 0;
-
-	va_start(args, fmt);
-	va_copy(tmp_args, args);
-    size = vsnprintf(NULL, 0, fmt, tmp_args) + 1;
-	va_end(tmp_args);
-
-	if (size > 0) {
-		str = (char*)malloc(size);
-		if (vsnprintf(str, size, fmt, args) < 0) {
-			str[size-1] = 0;
-		}
-
-        write(STDOUT_FILENO, str, size);
-        free(str);
-	}
-
-	va_end(args);
-	return 0;
-}
-
-#elif defined(_WIN32) || defined(_WIN64)
-
-#include <Windows.h>
+#if defined(_WIN32) || defined(_WIN64)
+#   include <Windows.h>
 
 int httpie_msg(const char* fmt, ...) {
 
@@ -62,7 +32,34 @@ int httpie_msg(const char* fmt, ...) {
 	va_end(args);
 	return 0;
 }
+#else
+#   include <unistd.h>
+#   include <stdarg.h>
 
+int httpie_msg(const char* fmt, ...) {
+
+	size_t size;
+	va_list args, tmp_args;
+	char* str = 0;
+
+	va_start(args, fmt);
+	va_copy(tmp_args, args);
+    size = vsnprintf(NULL, 0, fmt, tmp_args) + 1;
+	va_end(tmp_args);
+
+	if (size > 0) {
+		str = (char*)malloc(size);
+		if (vsnprintf(str, size, fmt, args) < 0) {
+			str[size-1] = 0;
+		}
+
+        write(STDOUT_FILENO, str, size);
+        free(str);
+	}
+
+	va_end(args);
+	return 0;
+}
 #endif
 
 char* base64_encode(const unsigned char* src, size_t len) {

@@ -3,31 +3,32 @@
 #include "request.h"
 #include "file.h"
 
-#ifdef __linux__
+#if defined(_WIN32) || defined(_WIN64)
+#   include <WinSock2.h>
+#   include <ws2tcpip.h>
+#   include <Windows.h> // put below winsock headers
+    typedef SSIZE_T ssize_t;
+#else 
 #   include <sys/socket.h>
 #   include <netinet/in.h>
 #   include <arpa/inet.h> // inet_addr()
+#   include <unistd.h>
 #   ifndef INVALID_SOCKET
 #       define INVALID_SOCKET -1
 #   endif
 #   ifndef SOCKET_ERROR
 #       define SOCKET_ERROR -1
 #   endif
-#elif defined(_WIN32) || defined(_WIN64)
-#   include <WinSock2.h>
-#   include <ws2tcpip.h>
-#   include <Windows.h> // put below winsock headers
-    typedef SSIZE_T ssize_t;
 #endif
 
 #define REQUEST_SIZE 2048
 #define DEFAULT_PORT 8080
 
 struct httpie_internal {
-#ifdef __linux__
-#   define HTTPIE_SOCK_T int
-#elif defined(_WIN32) || defined(WIN32)
+#if defined(_WIN32) || defined(WIN32)
 #   define HTTPIE_SOCK_T SOCKET
+#else
+#   define HTTPIE_SOCK_T int
 #endif
     HTTPIE_SOCK_T sock, msg_sock;
     struct sockaddr_in local, client;
@@ -37,10 +38,10 @@ struct httpie_internal {
 };
 
 static void httpie_close(struct httpie* server) {
-#ifdef __linux__
-    close(server->internal->msg_sock);
-#elif defined(_WIN32) || defined(_WIN64)
+#if defined(_WIN32) || defined(_WIN64)
     closesocket(server->internal->msg_sock);
+#else
+    close(server->internal->msg_sock);
 #endif
 }
 
@@ -67,16 +68,16 @@ int httpie_job(struct httpie *server) {
 
     for (;;) {
         // wait for a connection
-#ifdef __linux__
-        server->internal->msg_sock = accept(
-            server->internal->sock,
-            (struct sockaddr *) &server->internal->client,
-            (socklen_t *) &server->internal->address_length);
-#elif defined(_WIN32) || defined(_WIN64)
+#if defined(_WIN32) || defined(_WIN64)
         server->internal->msg_sock = accept(
             server->internal->sock,
             (struct sockaddr*)&server->internal->client,
             &server->internal->address_length);
+#else
+        server->internal->msg_sock = accept(
+            server->internal->sock,
+            (struct sockaddr *) &server->internal->client,
+            (socklen_t *) &server->internal->address_length);
 #endif
 
         if (server->internal->msg_sock == INVALID_SOCKET) {
@@ -129,10 +130,10 @@ int httpie_job(struct httpie *server) {
 #endif
         
         // send http header and response
-        if ((server->internal->sent = httpie_send(server->internal->msg_sock, response.header.data, (int)response.header.size - 1)) == SOCKET_ERROR) {
+        if ((server->internal->sent = httpie_send(server->internal->msg_sock, response.header.data, (int)response.header.size)) == SOCKET_ERROR) {
             fprintf(stderr, "Error sending response header.\n");
         } else if (response.body.size > 0) {
-            if ((server->internal->sent = httpie_send(server->internal->msg_sock, response.body.data, (int)response.body.size - 1)) == SOCKET_ERROR) {
+            if ((server->internal->sent = httpie_send(server->internal->msg_sock, response.body.data, (int)response.body.size)) == SOCKET_ERROR) {
                 fprintf(stderr, "Error sending response body.\n"); // TODO fail sometimes
             }
         }

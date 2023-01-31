@@ -77,7 +77,7 @@ int layer_load_from_png_file(struct layer* layer, const char* path, size_t width
         return -1;
     }
 
-    struct buf png = png_decode(file_buffer.data, (int)file_buffer.size);
+    struct buf png = png_decode((unsigned char*)file_buffer.data, (int)file_buffer.size);
     if (png.size < 1) {
         return -1;
     }

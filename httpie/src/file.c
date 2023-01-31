@@ -1,11 +1,22 @@
 #include "file.h"
 
-#ifdef __linux__
-#	define SLASH '/'
+#if defined(_WIN32) || defined(_WIN64)
+#	include "Windows.h"
+
+int file_exists(const char* path) {
+	DWORD dwAttrib = GetFileAttributes(path);
+	return (dwAttrib != INVALID_FILE_ATTRIBUTES && !(dwAttrib & FILE_ATTRIBUTE_DIRECTORY));
+}
+
+int cwd_get(size_t size, char* buffer) {
+	return GetCurrentDirectoryA((DWORD)size, buffer);
+}
+#else
+#	include <unistd.h>
 
 int file_exists(const char *path) {
 
-    if (access( path, F_OK ) == 0) {
+    if (access(path, F_OK) == 0) {
         return 1;
     } else {
         return 0;
@@ -40,19 +51,7 @@ int cwd_get(size_t size, char* buffer) {
 	}
 
 	free (buf);
-}
-
-#elif defined(_WIN32) || defined(_WIN64)
-#	include "Windows.h"
-#	define SLASH '\\'
-
-int file_exists(const char* path) {
-	DWORD dwAttrib = GetFileAttributes(path);
-	return (dwAttrib != INVALID_FILE_ATTRIBUTES && !(dwAttrib & FILE_ATTRIBUTE_DIRECTORY));
-}
-
-int cwd_get(size_t size, char* buffer) {
-	return GetCurrentDirectoryA((DWORD)size, buffer);
+	return 0;
 }
 
 #endif
@@ -77,7 +76,7 @@ void path_get_absolute(struct path pth, char* buffer) {
 			char* buffer_ptr = buffer;
 			const int cwd_length = cwd_get(FILE_MAX_PATH, buffer_ptr);
 			buffer_ptr += cwd_length;
-			*buffer_ptr++ = SLASH;
+			*buffer_ptr++ = '/';
 			memcpy(buffer_ptr, pth.path_str, pth.path_str_size);
 			*(buffer_ptr + pth.path_str_size) = '\n';
 			return;
