@@ -5,8 +5,8 @@
 #include "http.h"
 
 struct response {
-    struct buf header;
-    struct buf body;
+    // struct buf header;
+    struct buf buf;
 //     content-type,
 //     content-encoding,
 //     date,
@@ -14,6 +14,7 @@ struct response {
 };
 
 struct response response_from_file(const char* path);
+struct response response_mk(void* body, size_t body_size, const char* fmt, ...);
 
 enum RESPONSE_STATUS {
     RESPONSE_STATUS_UNKNOWN,
@@ -27,8 +28,7 @@ extern const struct response RESPONSE_GET[];
 
 #define response_static(status, type, str_body)\
     (struct response) {\
-        .header = string_from_static(status type),\
-        .body = string_from_static(str_body),  \
+        .buf = string_from_static(status type str_body),  \
     }
 
 #define response_200_static_text(str)\

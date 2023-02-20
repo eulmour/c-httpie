@@ -1,11 +1,23 @@
 [Bb]in/
 [Bb]uild/
 [Oo]ut/
+[Dd]ebug/
 [Cc][Mm]ake*/
+[Cc][Mm]ake[Cc]ache*
+[Cc]make_install.cmake
+*.pbxproj
+*.xcsettings
+*.xcuserstate
+*.xcbkptlist
+IDEWorkspaceChecks.plist
+xcschememanagement.plist
+ *.cmake
 .idea/
 .vs/
 .vscode/
 .cache/
+.DS_Store
+build.sh
 
 *.lib
 *.obj

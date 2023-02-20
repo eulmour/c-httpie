@@ -24,10 +24,7 @@ struct response route_hello(const struct request request) {
 
     (void)request;
 
-    return response_static(
-        HTTP_STR_200_OK,
-        HTTP_STR_CONTENT_TEXT_HTML,
-        "<!DOCTYPE html>"
+    const char* temp = "<!DOCTYPE html>"
         "<html>"
         "<head>"
             "<title>OK</title>"
@@ -35,7 +32,11 @@ struct response route_hello(const struct request request) {
         "<body>"
             "<h1>Success</h1>Hello world"
         "</body>"
-        "</html>"
+        "</html>";
+
+    return response_mk((void*)temp, 98,
+        HTTPIE_PROTOCOL" 200 OK\r\n"
+        "Content-Type: text/html\r\n\r\n"
     );
 }
 
@@ -43,11 +44,10 @@ struct response route_json_test(struct request request) {
 
     (void)request;
 
-    return response_static(
-        HTTP_STR_200_OK,
-        HTTP_STR_CONTENT_APP_JSON,
-        "{\"label\":\"Test\",\"entries\": []}"
-    );
+    return response_mk(NULL, 0,
+        HTTPIE_PROTOCOL" 200 OK\r\n"
+        "Content-Type: application/json\r\n\r\n"
+        "{\"label\":\"Test\",\"entries\": []}");
 }
 
 struct response route_ml_generate(struct request request) {
@@ -99,10 +99,10 @@ struct response route_ml_generate(struct request request) {
     free(image);
     layer_unload(&layer);
 
-    return (struct response) {
-        .body = (struct buf) { .data = (char*)png_data, .size = png_size, .capacity = png_size, .dyn = 1 },
-        .header = string_from_static(HTTP_STR_200_OK HTTP_STR_CONTENT_IMG_PNG),
-    };
+    return response_mk((void*)png_data, png_size,
+        HTTPIE_PROTOCOL" 200 OK\r\n"
+        "Content-Type: image/png\r\n"
+        "Content-Length: %zu\r\n\r\n", png_size);
 }
 
 struct response route_ml_guess(struct request request) {
@@ -154,10 +154,10 @@ struct response route_ml_guess(struct request request) {
     struct buf result_buf = buf_alloc(64 * sizeof(char));
     result_buf.size = sprintf(result_buf.data, "This is probably %s", wish_result == 1 ? "circle" : "square") + 1;
 
-    response = (struct response) {
-        .body = result_buf,
-        .header = string_from_static(HTTP_STR_200_OK HTTP_STR_CONTENT_TEXT_PLAIN)
-    };
+    return response_mk(result_buf.data, result_buf.size,
+        HTTPIE_PROTOCOL" 200 OK\r\n"
+        "Content-Type: text/plain\r\n"
+        "Content-Length: %zu\r\n\r\n", result_buf.size);
 
 finish:
     perceptron_unload(&perceptron);
@@ -241,10 +241,10 @@ struct response route_ml_train(struct request request) {
     layer_unload(&weights);
     layer_unload(&inputs);
 
-    return (struct response) {
-        .body = out_buffer,
-        .header = string_from_static(HTTP_STR_200_OK HTTP_STR_CONTENT_TEXT_PLAIN)
-    };
+    return response_mk(out_buffer.data, out_buffer.size,
+        HTTPIE_PROTOCOL" 200 OK\r\n"
+        "Content-Type: text/plain\r\n"
+        "Content-Length: %zu\r\n\r\n", out_buffer.size);
 }
 
 struct response route_ml_model_image(struct request request) {
@@ -254,8 +254,8 @@ struct response route_ml_model_image(struct request request) {
         return response_404_static_text("Image is not available yet");
     }
 
-    return (struct response) {
-        .body = image_file,
-        .header = string_from_static(HTTP_STR_200_OK HTTP_STR_CONTENT_IMG_PNG),
-    };
+    return response_mk(image_file.data, image_file.size,
+        HTTPIE_PROTOCOL" 200 OK\r\n"
+        "Content-Type: text/plain\r\n"
+        "Content-Length: %zu\r\n\r\n", image_file.size);
 }

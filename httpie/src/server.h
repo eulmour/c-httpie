@@ -21,6 +21,6 @@ int httpie_unload(struct httpie *server);
 int httpie_job(struct httpie *server);
 int httpie_listen(struct httpie *server);
 int httpie_recv(long long sock, char** buffer, size_t* size, size_t* body_size);
-int httpie_send(long long sock, const char* content, int size);
+long httpie_send(long long sock, const char* content, int size);
 
 #endif

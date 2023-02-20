@@ -82,7 +82,7 @@ int httpie_job(struct httpie *server) {
 
         if (server->internal->msg_sock == INVALID_SOCKET) {
             fprintf(stderr, "Error: unable to accept socket.\n");
-            return - 1;
+            continue;
         }
 
 #ifndef NDEBUG
@@ -129,21 +129,13 @@ int httpie_job(struct httpie *server) {
         printf("Client requested: %s\n", request.query.path);
 #endif
         
-        // send http header and response
-        if ((server->internal->sent = httpie_send(server->internal->msg_sock, response.header.data, (int)response.header.size)) == SOCKET_ERROR) {
+        // send our response
+        if ((server->internal->sent = httpie_send(server->internal->msg_sock, response.buf.data, (int)response.buf.size)) == SOCKET_ERROR) {
             fprintf(stderr, "Error sending response header.\n");
-        } else if (response.body.size > 0) {
-            if ((server->internal->sent = httpie_send(server->internal->msg_sock, response.body.data, (int)response.body.size)) == SOCKET_ERROR) {
-                fprintf(stderr, "Error sending response body.\n"); // TODO fail sometimes
-            }
         }
 
-        if (response.header.dyn) {
-            buf_free(&response.header);
-        }
-
-        if (response.body.dyn) {
-            buf_free(&response.body);
+        if (response.buf.dyn) {
+            buf_free(&response.buf);
         }
 
 cleanup:
@@ -274,14 +266,14 @@ int httpie_recv(long long sock, char** buffer, size_t* size, size_t* body_size) 
     return 0;
 }
 
-int httpie_send(long long sock, const char* content, int size) {
+long httpie_send(long long sock, const char* content, int size) {
 
     if (size < 1) {
         return 0;
     }
 
-    int sent = 0;
-    while ((sent = send((HTTPIE_SOCK_T)sock, content, size, 0)) < size) {
+    long sent = 0;
+    while ((sent = (long)send((HTTPIE_SOCK_T)sock, content, size, 0)) < size) {
         if (sent == SOCKET_ERROR) {
             return sent;
         }

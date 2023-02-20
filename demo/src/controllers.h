@@ -3,6 +3,7 @@
 
 #include "httpie.h"
 
+struct response route_hello(struct request request);
 struct response route_json_test(struct request request);
 
 struct response route_ml_generate(struct request request);

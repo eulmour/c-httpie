@@ -41,7 +41,7 @@
 #define HTTP_STR_CONTENT_VIDEO_WEBM "Content-Type: video/webm\r\n\r\n"
 
 enum http_method {
-    HTTP_METHOD_UNKNOWN,
+    HTTP_METHOD_UNKNOWN = 0,
     HTTP_METHOD_GET,
     HTTP_METHOD_HEAD,
     HTTP_METHOD_POST,
@@ -55,7 +55,7 @@ enum http_method {
 };
 
 enum http_protocol {
-    HTTP_PROTOCOL_UNKNOWN,
+    HTTP_PROTOCOL_UNKNOWN = HTTP_METHOD_ENUM_END,
     HTTP_PROTOCOL_1_0,
     HTTP_PROTOCOL_1_1,
     HTTP_PROTOCOL_2_0,
@@ -64,7 +64,7 @@ enum http_protocol {
 };
 
 enum http_content_type {
-    HTTP_CONTENT_UNKNOWN,
+    HTTP_CONTENT_UNKNOWN = HTTP_PROTOCOL_ENUM_END,
     HTTP_CONTENT_TEXT_PLAIN,
     HTTP_CONTENT_TEXT_HTML,
     HTTP_CONTENT_TEXT_CSS,
@@ -88,7 +88,7 @@ enum http_content_type {
 };
 
 enum http_status_code {
-    HTTP_STATUS_CODE_UNKNOWN,
+    HTTP_STATUS_CODE_UNKNOWN = HTTP_CONTENT_ENUM_END,
     HTTP_100_CONTINUE, // info
     HTTP_101_SWITCHING_PROTOCOLS,
     HTTP_102_PROCESSING,
@@ -166,17 +166,29 @@ enum http_status_code {
     HTTP_STATUS_CODE_ENUM_END
 };
 
-enum response_status {
-    RESPONSE_RESULT_UNKNOWN,
-    RESPONSE_RESULT_OK,
-    RESPONSE_RESULT_NOT_FOUND,
-    RESPONSE_RESULT_ENUM_END
+
+enum http_content_encoding {
+    HTTP_ENCODING_UNKNOWN
 };
+
+//enum response_status {
+//    RESPONSE_RESULT_UNKNOWN,
+//    RESPONSE_RESULT_OK,
+//    RESPONSE_RESULT_NOT_FOUND,
+//    RESPONSE_RESULT_ENUM_END
+//};
 
 extern const char* const HTTP_STR_METHOD[];
 extern const char* const HTTP_STR_PROTOCOL[];
 extern const char* const HTTP_STR_CONTENT[];
 extern const char* const HTTP_STR_CONTENT_EXT[];
+
+//extern const char* const HTTP_STR[];
+
+extern struct http_def {
+    const char* const str;
+    size_t size;
+} HTTP_DEF[];
 
 enum http_method http_method_from_str(const char* str);
 enum http_protocol http_protocol_from_str(const char* str);

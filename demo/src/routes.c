@@ -3,6 +3,10 @@
 
 struct route routes[] = {
     {
+        .name = "/hello",
+        .proc = &route_hello
+    },
+    {
         .name = "\\json",
         .proc = &route_json_test
     },

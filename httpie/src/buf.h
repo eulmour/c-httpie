@@ -19,6 +19,9 @@ struct buf {
         .size = sizeof(text),\
     }
 
+#define buf_from_mem(ptr, sz)\
+    (struct buf) { .data = (ptr), .size = (sz), .capacity = (sz), .dyn = 1 }
+
 struct buf buf_alloc(size_t size);
 struct buf buf_new(const void* data, size_t size);
 
